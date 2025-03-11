@@ -10,8 +10,11 @@ package dal;
  */
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import model.Employee;
 import model.EmployeeRole;
+import model.Role;
 
 public class EmployeeRoleDAO extends DBContext {
 
@@ -52,6 +55,27 @@ public class EmployeeRoleDAO extends DBContext {
         return roles;
     }
 
+    public Role getRoleMaxByEmployeeId(int employeeId) {
+        RoleDAO rdao = new RoleDAO();
+        String sql = "SELECT MIN(er.role_id) AS min_role_id\n"
+                + "FROM Employee e\n"
+                + "FULL JOIN Employee_Role er\n"
+                + "    ON e.employee_id = er.employee_id\n"
+                + "WHERE e.employee_id = ?\n"
+                + "GROUP BY e.employee_id, e.name;";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, employeeId);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                return rdao.getRoleById(rs.getInt("min_role_id"));
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return null;
+    }
+
     // Thêm mới 1 dòng Employee_Role
     public void insert(EmployeeRole er) {
         String sql = "INSERT INTO Employee_Role (role_id, employee_id) VALUES (?, ?)";
@@ -77,7 +101,6 @@ public class EmployeeRoleDAO extends DBContext {
 //            System.out.println(e);
 //        }
 //    }
-
     // Xóa tất cả vai trò của 1 nhân viên
     public void deleteByEmployeeId(int employeeId) {
         String sql = "DELETE FROM Employee_Role WHERE employee_id = ?";
@@ -90,28 +113,10 @@ public class EmployeeRoleDAO extends DBContext {
         }
     }
 
+    
+
     // Test DAO
     public static void main(String[] args) {
         EmployeeRoleDAO dao = new EmployeeRoleDAO();
-
-        // Thêm mới
-        dao.insert(new EmployeeRole(1, 1));
-        dao.insert(new EmployeeRole(2, 1));
-
-        // Lấy tất cả
-        List<EmployeeRole> list = dao.getAll();
-        for (EmployeeRole er : list) {
-            System.out.println(er);
-        }
-
-        // Lấy role theo employee_id
-        System.out.println("Roles for employee 1: " + dao.getRolesByEmployeeId(1));
-
-        // Xóa 1 dòng
-//        dao.delete(2, 1);
-
-        // Xóa toàn bộ vai trò của employee 1
-        dao.deleteByEmployeeId(1);
     }
 }
-

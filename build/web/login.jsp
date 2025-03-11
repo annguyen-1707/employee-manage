@@ -1,4 +1,6 @@
 <%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8" %>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -29,12 +31,13 @@
                     <form class="auth-form" action="login" method="POST">
                         <div class="form-group">
                             <label for="email"><i class="fas fa-envelope"></i> Email</label>
-                            <input type="email" id="email" name="email" required placeholder="Enter your email">
+                            <input type="email" id="email" name="email" value="${cookie.cemail.value} "
+                                   required placeholder="Enter your email">
                         </div>
                         <div class="form-group">
                             <label for="password"><i class="fas fa-lock"></i> Password</label>
                             <div class="password-input">
-                                <input type="password" id="password" name="pass" required
+                                <input type="password" id="password" name="pass" required value="${cookie.cpass.value}"
                                        placeholder="Enter your password">
                                 <i class="fas fa-eye toggle-password" onclick="togglePassword()"></i>
                             </div>
@@ -54,7 +57,7 @@
                 </div>
             </div>
         </div>
-        
+
         <script>
             function togglePassword() {
                 const passwordInput = document.getElementById('password');

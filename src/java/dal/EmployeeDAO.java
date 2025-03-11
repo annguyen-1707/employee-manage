@@ -12,6 +12,7 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 import model.Employee;
+import model.EmployeeRole;
 
 public class EmployeeDAO extends DBContext {
 
@@ -26,13 +27,14 @@ public class EmployeeDAO extends DBContext {
                 Employee e = new Employee(
                         rs.getInt("employee_id"),
                         rs.getString("name"),
-                        rs.getString("gender"),
+                        rs.getString("gender").equals("Male"),
                         rs.getInt("phone_number"),
                         rs.getString("address"),
                         rs.getInt("department_id"),
                         rs.getInt("manager_id"),
                         rs.getString("email"),
-                        rs.getString("password")
+                        rs.getString("password"),
+                        rs.getDate("start_workDate")
                 );
                 return e;
             }
@@ -52,13 +54,14 @@ public class EmployeeDAO extends DBContext {
                 Employee e = new Employee(
                         rs.getInt("employee_id"),
                         rs.getString("name"),
-                        rs.getString("gender"),
+                        rs.getString("gender").equals("Male"),
                         rs.getInt("phone_number"),
                         rs.getString("address"),
                         rs.getInt("department_id"),
                         rs.getInt("manager_id"),
                         rs.getString("email"),
-                        rs.getString("password")
+                        rs.getString("password"),
+                        rs.getDate("start_workDate")
                 );
                 list.add(e);
             }
@@ -66,6 +69,32 @@ public class EmployeeDAO extends DBContext {
             System.out.println(e);
         }
         return list;
+    }
+
+    public Employee getByEmployeeId(int employeeId) {
+        String sql = "SELECT * FROM Employee where employee_id = " + employeeId;
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            ResultSet rs = st.executeQuery();
+            if (rs.next()) {
+                Employee e = new Employee(
+                        rs.getInt("employee_id"),
+                        rs.getString("name"),
+                        rs.getString("gender").equals("Male"),
+                        rs.getInt("phone_number"),
+                        rs.getString("address"),
+                        rs.getInt("department_id"),
+                        rs.getInt("manager_id"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getDate("start_workDate")
+                );
+                return e;
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return null;
     }
 
     public Employee checkOnlyEmail(String email) {
@@ -78,13 +107,14 @@ public class EmployeeDAO extends DBContext {
                 Employee e = new Employee(
                         rs.getInt("employee_id"),
                         rs.getString("name"),
-                        rs.getString("gender"),
+                        rs.getString("gender").equals("Male"),
                         rs.getInt("phone_number"),
                         rs.getString("address"),
                         rs.getInt("department_id"),
                         rs.getInt("manager_id"),
                         rs.getString("email"),
-                        rs.getString("password")
+                        rs.getString("password"),
+                        rs.getDate("start_workDate")
                 );
                 return e;
             }
@@ -95,19 +125,20 @@ public class EmployeeDAO extends DBContext {
     }
 
     public void signEmployee(Employee e) {
-        String sql = "INSERT INTO Employee (employee_id, name, gender, phone_number, address, department_id, manager_id, email, password) "
+        String sql = "INSERT INTO Employee (employee_id, name, gender, phone_number, address, department_id, manager_id, email, password, start_workDate) "
                 + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         try {
             PreparedStatement st = connection.prepareStatement(sql);
             st.setInt(1, e.getEmployeeId());
             st.setString(2, e.getName());
-            st.setString(3, e.getGender());
+            st.setString(3, e.isGender() ? "Male" : "Female");
             st.setInt(4, e.getPhoneNumber());
             st.setString(5, e.getAddress());
             st.setInt(6, e.getDepartmentId());
             st.setInt(7, e.getManagerId());
             st.setString(8, e.getEmail());
             st.setString(9, e.getPassword());
+            st.setDate(10, e.getStartWorkDate());
             st.executeUpdate();
         } catch (SQLException ex) {
             System.out.println(ex);
@@ -182,8 +213,12 @@ public class EmployeeDAO extends DBContext {
             if (name != null && !name.isEmpty()) {
                 st.setString(index++, name);
             }
-            if (gender != null && !gender.isEmpty()) {
-                st.setString(index++, gender);
+            if (gender != null) {
+                if ("true".equalsIgnoreCase(gender)) {
+                    gender = "Male";
+                } else if ("false".equalsIgnoreCase(gender)) {
+                    gender = "Female";
+                }
             }
             if (phone != null && !phone.isEmpty()) {
                 st.setString(index++, phone);
@@ -217,10 +252,49 @@ public class EmployeeDAO extends DBContext {
         }
     }
 
+    public List<Employee> getEmloyeesForDivisionLeader(Employee employee) {
+        List<Employee> list = new ArrayList<>();
+        String sql = "                     SELECT * FROM Employee WHERE employee_id IN                           "
+                + "                                               (SELECT e.employee_id \n"
+                + "                                                FROM Employee e\n"
+                + "                                                FULL JOIN Employee_Role er \n"
+                + "                                                ON e.employee_id = er.employee_id\n"
+                + "                                                WHERE e.department_id = ?\n"
+                + "                                                GROUP BY e.employee_id, e.name\n"
+                + "                                                HAVING MIN(er.role_id) > ?  \n"
+                + ")";
+        try {
+            PreparedStatement st = connection.prepareStatement(sql);
+            st.setInt(1, employee.getDepartmentId());
+            st.setInt(2, employee.getRoleId());
+            ResultSet rs = st.executeQuery();
+            while (rs.next()) {
+                Employee e = new Employee(
+                        rs.getInt("employee_id"),
+                        rs.getString("name"),
+                        rs.getString("gender").equals("Male"),
+                        rs.getInt("phone_number"),
+                        rs.getString("address"),
+                        rs.getInt("department_id"),
+                        rs.getInt("manager_id"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getDate("start_workDate")
+                );
+                list.add(e);
+            }
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+        return list;
+    }
+
     public static void main(String[] args) {
         EmployeeDAO aO = new EmployeeDAO();
-        Employee e = aO.checkOnlyEmail("levanl@company.com");
-        System.out.println(e);
+        List<Employee> employees = aO.getEmloyeesForDivisionLeader(aO.getByEmployeeId(2));
+        for (Employee employee : employees) {
+            System.out.println(employee);
+        }
     }
 
 }

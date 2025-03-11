@@ -4,6 +4,7 @@
  */
 package model;
 
+import dal.EmployeeDAO;
 import java.sql.Date;
 
 /**
@@ -11,6 +12,7 @@ import java.sql.Date;
  * @author -Asus-
  */
 public class Application {
+
     private int applicationId;
     private String title;
     private Date startDate;
@@ -18,11 +20,17 @@ public class Application {
     private String reason;
     private String status;
     private int createdBy;
-    private int processedBy;
+    private Integer processedBy;
     private String note;
+    private String createdByName;
+    private String processedByName;
+    private String createByRole;
+    EmployeeDAO edao = new EmployeeDAO();
 
-    public Application(int applicationId, String title, Date startDate, Date endDate, String reason, 
-                       String status, int createdBy, int processedBy, String note) {
+    public Application() {
+    }
+
+    public Application(int applicationId, String title, Date startDate, Date endDate, String reason, String status, int createdBy, Integer processedBy, String note) {
         this.applicationId = applicationId;
         this.title = title;
         this.startDate = startDate;
@@ -34,7 +42,36 @@ public class Application {
         this.note = note;
     }
 
+    
+    
+    public Application( String title, Date startDate, Date endDate, String reason,
+            String status, int createdBy) {
+        this.title = title;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.reason = reason;
+        this.status = status;
+        this.createdBy = createdBy;
+
+    }
+
     // Getters, Setters, toString() đầy đủ nếu cần
+    public String getCreatedByName() {
+        return edao.getByEmployeeId(createdBy).getName();
+    }
+
+    public String getProcessedByName() {
+        if (processedBy == 0) { // chưa có ai xử lí
+            return " ";
+        } else {
+            processedByName = edao.getByEmployeeId(processedBy).getName();
+            return processedByName;
+        }
+    }
+
+    public String getCreateByRole() {
+        return edao.getByEmployeeId(createdBy).getRole();
+    }
 
     public int getApplicationId() {
         return applicationId;
@@ -92,11 +129,11 @@ public class Application {
         this.createdBy = createdBy;
     }
 
-    public int getProcessedBy() {
+    public Integer getProcessedBy() {
         return processedBy;
     }
 
-    public void setProcessedBy(int processedBy) {
+    public void setProcessedBy(Integer processedBy) {
         this.processedBy = processedBy;
     }
 
@@ -110,9 +147,9 @@ public class Application {
 
     @Override
     public String toString() {
-        return "Application{" + "applicationId=" + applicationId + ", title=" + title + ", startDate=" + startDate + ", endDate=" + endDate + ", reason=" + reason + ", status=" + status + ", createdBy=" + createdBy + ", processedBy=" + processedBy + ", note=" + note + '}';
+        return "Application{" + "applicationId=" + applicationId + ", title=" + title + ", startDate=" + startDate
+                + ", endDate=" + endDate + ", reason=" + reason + ", status=" + status + ", createdBy=" + createdBy
+                + ", processedBy=" + processedBy + ", note=" + note + '}';
     }
-    
-    
-}
 
+}
